@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In - JobConnect</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav>
+    <div class="logo">Job<span>Connect</span></div>
+    <div class="nav-right">
+        <a href="{{ url_for('home') }}" class="btn-ghost" style="text-decoration:none;">Back to Home</a>
+    </div>
+</nav>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Welcome back</h2>
+        <p>Log in to access your saved jobs and applications.</p>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-message">{{ messages[0] }}</div>
+          {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-group">
+                <input type="email" name="email" class="form-control" placeholder="Email address" required>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <button type="submit" class="auth-btn">Log in</button>
+        </form>
+
+        <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:20px;">
+            Don't have an account? <a href="{{ url_for('signup') }}" style="color:var(--accent);text-decoration:none">Sign up</a>
+        </p>
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobConnect – Find Your Next Role</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+  <div class="logo">Job<span>Connect</span></div>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showTab('jobs')">Browse Jobs</a></li>
+    <li><a href="#" onclick="showTab('companies')">Companies</a></li>
+    <li><a href="#">Resources</a></li>
+  </ul>
+  <div class="nav-right">
+    {% if session.loggedin %}
+      <a href="{{ url_for('logout') }}" class="btn-ghost">Log out</a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="btn-ghost">Log in</a>
+    {% endif %}
+    <button class="btn-accent" onclick="openModal(null,'signup')">Post a Job</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">2,400+ new jobs this week</div>
+  <h1>Find work that<br>actually <span class="hl">fits you.</span></h1>
+  <p>Search thousands of verified job listings from top companies. Filter by role, location, salary, and experience — all in one place.</p>
+  <div class="hero-stats">
+    <div class="stat"><strong>48K+</strong><span>Active listings</span></div>
+    <div class="stat"><strong>12K+</strong><span>Companies hiring</span></div>
+    <div class="stat"><strong>94%</strong><span>Placement rate</span></div>
+  </div>
+</section>
+
+<section class="search-section">
+  <div class="search-bar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7a7a8a" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Job title, skill, or company…" oninput="filterJobs()">
+    <div class="divider"></div>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7a7a8a" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    <input class="location-input" type="text" id="locationInput" placeholder="City or Remote" oninput="filterJobs()">
+    <button onclick="filterJobs()">Search Jobs</button>
+  </div>
+  <div class="filters-row">
+    <span class="filter-label">Quick filters:</span>
+    <button class="filter-chip active" onclick="toggleChip(this,'All')">All</button>
+    <button class="filter-chip" onclick="toggleChip(this,'Remote')">Remote</button>
+    <button class="filter-chip" onclick="toggleChip(this,'Full-time')">Full-time</button>
+    <button class="filter-chip" onclick="toggleChip(this,'Part-time')">Part-time</button>
+    <button class="filter-chip" onclick="toggleChip(this,'Internship')">Internship</button>
+    <button class="filter-chip" onclick="toggleChip(this,'Contract')">Contract</button>
+    <select class="filter-select" id="expFilter" onchange="filterJobs()">
+      <option value="">Experience level</option>
+      <option value="Fresher">Fresher (0–1 yr)</option>
+      <option value="Junior">Junior (1–3 yrs)</option>
+      <option value="Mid">Mid (3–5 yrs)</option>
+      <option value="Senior">Senior (5+ yrs)</option>
+    </select>
+  </div>
+</section>
+
+<div class="main-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Salary Range (LPA)</div>
+      <div class="salary-range">
+        <input type="range" min="0" max="50" value="50" id="salaryRange" oninput="updateSalary(this.value)">
+        <div class="salary-labels"><span>₹0</span><span id="salaryLabel">₹50+ LPA</span></div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Job Type</div>
+      <div class="checkbox-group">
+        <label class="checkbox-item"><input type="checkbox" checked onchange="filterJobs()"><label>Full-time</label><span class="count">284</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Part-time</label><span class="count">56</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Contract</label><span class="count">92</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Internship</label><span class="count">41</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Remote</label><span class="count">173</span></label>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Department</div>
+      <div class="checkbox-group">
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Engineering</label><span class="count">312</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Design</label><span class="count">88</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Marketing</label><span class="count">64</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Data Science</label><span class="count">97</span></label>
+        <label class="checkbox-item"><input type="checkbox" onchange="filterJobs()"><label>Finance</label><span class="count">43</span></label>
+      </div>
+    </div>
+  </aside>
+
+  <main class="listings-area">
+    <div class="listings-header">
+      <div>
+        <h2>Available Positions</h2>
+        <span id="resultCount">Showing 8 jobs</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="view-tabs">
+          <button class="view-tab active">List</button>
+          <button class="view-tab">Grid</button>
+        </div>
+        <select class="sort-select">
+          <option>Most Relevant</option>
+          <option>Newest First</option>
+          <option>Highest Salary</option>
+          <option>Deadline Soon</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="jobList"></div>
+    <div class="no-results" id="noResults">
+      <div class="emoji">🔍</div>
+      <h3>No jobs found</h3>
+      <p>Try adjusting your search or filters</p>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div style="color:var(--muted);font-size:14px" id="modalCompany"></div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tick">✓</span><span id="toastMsg"></span></div>
+
+<footer>
+  <div class="logo" style="font-size:16px">Job<span>Connect</span></div>
+  <span>© 2025 JobConnect. Built for Web Technologies Project.</span>
+  <span>48,241 jobs · 12,400 companies</span>
+</footer>
+
+<script>
+const jobs = [
+  {
+    id: 1, title: "Frontend Developer", company: "Zomato", logo: "ZO", logoColor: "#e23744", logoBg: "rgba(226,55,68,0.12)",
+    location: "Hyderabad", type: "Full-time", remote: true, salary: "12–18 LPA", salaryNum: 18, experience: "Junior",
+    deadline: "Apr 15, 2025", tags: ["React", "TypeScript", "CSS", "REST API"], featured: false, badge: "new",
+    description: "We are looking for a talented Frontend Developer to build and maintain our web applications.",
+    responsibilities: "Build reusable UI components in React. Optimize pages for performance and SEO."
+  },
+  {
+    id: 2, title: "Full Stack Engineer", company: "Swiggy", logo: "SW", logoColor: "#fc8019", logoBg: "rgba(252,128,25,0.12)",
+    location: "Bengaluru", type: "Full-time", remote: false, salary: "20–30 LPA", salaryNum: 30, experience: "Mid",
+    deadline: "Apr 20, 2025", tags: ["Node.js", "React", "MongoDB", "AWS"], featured: true, badge: "hot",
+    description: "Join Swiggy's core platform team to build scalable microservices and delightful user interfaces.",
+    responsibilities: "Design and implement RESTful APIs. Build React frontends. Deploy and monitor on AWS."
+  },
+  {
+    id: 3, title: "UI/UX Designer", company: "Meesho", logo: "ME", logoColor: "#9f1dca", logoBg: "rgba(159,29,202,0.12)",
+    location: "Remote", type: "Remote", remote: true, salary: "10–14 LPA", salaryNum: 14, experience: "Junior",
+    deadline: "Apr 10, 2025", tags: ["Figma", "Prototyping", "User Research", "Design Systems"], featured: false, badge: "remote",
+    description: "Design intuitive and accessible product experiences for Meesho's millions of users.",
+    responsibilities: "Conduct user interviews and usability testing. Design wireframes and high-fidelity mockups."
+  },
+  {
+    id: 4, title: "Data Analyst", company: "CRED", logo: "CR", logoColor: "#c8f55a", logoBg: "rgba(200,245,90,0.08)",
+    location: "Bengaluru", type: "Full-time", remote: false, salary: "8–14 LPA", salaryNum: 14, experience: "Fresher",
+    deadline: "May 1, 2025", tags: ["SQL", "Python", "Tableau", "Excel"], featured: false, badge: "new",
+    description: "Analyse large datasets to derive actionable insights that drive product and business decisions.",
+    responsibilities: "Write complex SQL queries. Build dashboards in Tableau. Conduct A/B test analysis."
+  }
+];
+
+let activeType = 'All';
+let currentJob = null;
+
+function getLogoSVG(job) {
+  return `<div class="company-logo" style="background:${job.logoBg};color:${job.logoColor}">${job.logo}</div>`;
+}
+
+function getBadge(badge) {
+  if (!badge) return '';
+  const map = {
+    new: ['badge-new', 'NEW'],
+    hot: ['badge-hot', 'HOT'],
+    remote: ['badge-remote', 'REMOTE'],
+    featured: ['badge-featured', 'FEATURED']
+  };
+  const [cls, label] = map[badge] || [];
+  return cls ? `<span class="badge ${cls}">${label}</span>` : '';
+}
+
+function renderJobs(list) {
+  const container = document.getElementById('jobList');
+  const noResults = document.getElementById('noResults');
+  document.getElementById('resultCount').textContent = `Showing ${list.length} job${list.length !== 1 ? 's' : ''}`;
+
+  if (list.length === 0) {
+    container.innerHTML = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  container.innerHTML = list.map(job => `
+    <div class="job-card${job.featured ? ' featured' : ''}" onclick="openModal(${job.id})">
+      ${getLogoSVG(job)}
+      <div class="job-info">
+        <div class="job-top">
+          <span class="job-title">${job.title}</span>
+          ${getBadge(job.badge)}
+          ${job.remote ? '<span class="badge badge-remote" style="margin-left:0">Remote OK</span>' : ''}
+        </div>
+        <div class="company-name">${job.company}</div>
+        <div class="job-meta">
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${job.location}
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            ${job.type}
+          </span>
+          <span class="meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${job.experience}
+          </span>
+        </div>
+        <div class="job-tags">
+          ${job.tags.map(t => `<span class="skill-tag">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div class="job-right">
+        <div>
+          <div class="salary">${job.salary}</div>
+          <div class="salary-period">per annum</div>
+        </div>
+        <div class="deadline">Deadline: ${job.deadline}</div>
+        <button class="apply-btn" onclick="event.stopPropagation();applyNow('${job.title}','${job.company}')">Apply Now</button>
+        <button class="save-btn" onclick="event.stopPropagation();saveJob('${job.title}')">♡ Save</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterJobs() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const loc = document.getElementById('locationInput').value.toLowerCase();
+  const exp = document.getElementById('expFilter').value;
+
+  const filtered = jobs.filter(job => {
+    const matchQ = !q || job.title.toLowerCase().includes(q)
+                     || job.company.toLowerCase().includes(q)
+                     || job.tags.some(t => t.toLowerCase().includes(q));
+    const matchLoc = !loc || job.location.toLowerCase().includes(loc) || (loc === 'remote' && job.remote);
+    const matchType = activeType === 'All' || job.type === activeType || (activeType === 'Remote' && job.remote);
+    const matchExp = !exp || job.experience === exp;
+    return matchQ && matchLoc && matchType && matchExp;
+  });
+  renderJobs(filtered);
+}
+
+function toggleChip(el, type) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeType = type;
+  filterJobs();
+}
+
+function updateSalary(val) {
+  document.getElementById('salaryLabel').textContent = val >= 50 ? '₹50+ LPA' : `Up to ₹${val} LPA`;
+}
+
+function openModal(id, mode) {
+  const overlay = document.getElementById('modalOverlay');
+  if (mode === 'signup') {
+    document.getElementById('modalTitle').textContent = 'Post a job';
+    document.getElementById('modalCompany').textContent = 'Reach thousands of candidates';
+    document.getElementById('modalBody').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <input type="text" placeholder="Company name" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:inherit;font-size:14px;outline:none;width:100%">
+        <input type="text" placeholder="Job title" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:inherit;font-size:14px;outline:none;width:100%">
+        <input type="email" placeholder="Work email" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:inherit;font-size:14px;outline:none;width:100%">
+        <select style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:inherit;font-size:14px;outline:none;width:100%"><option>Select job type</option><option>Full-time</option><option>Remote</option><option>Contract</option><option>Internship</option></select>
+        <button class="apply-btn" style="width:100%;padding:13px;font-size:15px;border-radius:10px" onclick="toast('Job posted! Candidates will see it shortly.')">Post Job</button>
+      </div>`;
+    overlay.classList.add('open'); return;
+  }
+
+  const job = jobs.find(j => j.id === id);
+  if (!job) return;
+  currentJob = job;
+
+  document.getElementById('modalTitle').textContent = job.title;
+  document.getElementById('modalCompany').textContent = `${job.company} · ${job.location}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-meta-grid" style="margin-bottom:20px">
+      <div class="modal-meta-item"><div class="mlabel">Salary</div><div class="mval" style="color:var(--accent)">${job.salary}</div></div>
+      <div class="modal-meta-item"><div class="mlabel">Type</div><div class="mval">${job.type}</div></div>
+      <div class="modal-meta-item"><div class="mlabel">Experience</div><div class="mval">${job.experience}</div></div>
+      <div class="modal-meta-item"><div class="mlabel">Deadline</div><div class="mval">${job.deadline}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">About the role</div>
+      <p>${job.description}</p>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Responsibilities</div>
+      <p>${job.responsibilities}</p>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Required Skills</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+        ${job.tags.map(t => `<span class="skill-tag" style="font-size:13px;padding:5px 12px">${t}</span>`).join('')}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="apply-btn" onclick="applyNow('${job.title}','${job.company}')">Apply Now</button>
+      <button class="save-btn" onclick="saveJob('${job.title}')">♡ Save</button>
+    </div>`;
+  overlay.classList.add('open');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+function applyNow(title, company) { closeModal(); showToast(`Application sent for ${title} at ${company}!`); }
+function saveJob(title) { showToast(`"${title}" saved to your list!`); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.querySelectorAll('.view-tab').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.view-tab').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+renderJobs(jobs);
+</script>
+</body>
+</html>
